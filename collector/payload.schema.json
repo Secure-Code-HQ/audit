@@ -1,0 +1,168 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "server-audit-v1-payload",
+  "title": "Server Audit v1 - Agent Payload",
+  "type": "object",
+  "required": ["token", "plan_id", "plan_version", "agent_version", "timestamp", "dry_run", "preflight_incomplete", "environment", "results", "step_results"],
+  "properties": {
+    "token": { "type": "string", "minLength": 10 },
+    "plan_id": { "type": "string", "enum": ["server-audit-free", "server-audit-paid"] },
+    "plan_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "agent_version": { "type": "string" },
+    "timestamp": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}" },
+    "dry_run": { "type": "boolean" },
+    "preflight_incomplete": { "type": "boolean" },
+
+    "server_context": {
+      "type": "object",
+      "properties": {
+        "network_exposure":  { "type": "string" },
+        "server_purpose":    { "type": "string" },
+        "data_sensitivity":  { "type": "string" }
+      }
+    },
+
+    "environment": {
+      "type": "object",
+      "required": ["os", "kernel", "public_ip", "uptime_days", "detected_stack"],
+      "properties": {
+        "os":          { "type": "string" },
+        "kernel":      { "type": "string" },
+        "public_ip":   { "type": ["string", "null"] },
+        "uptime_days": { "type": "number", "minimum": 0 },
+        "detected_stack": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "docker":                    { "type": "boolean" },
+            "docker_version":            { "type": ["string", "null"] },
+            "podman":                    { "type": "boolean" },
+            "nginx":                     { "type": "boolean" },
+            "nginx_version":             { "type": ["string", "null"] },
+            "caddy":                     { "type": "boolean" },
+            "caddy_version":             { "type": ["string", "null"] },
+            "postgresql":                { "type": "boolean" },
+            "postgresql_version":        { "type": ["string", "null"] },
+            "redis":                     { "type": "boolean" },
+            "redis_version":             { "type": ["string", "null"] },
+            "nodejs":                    { "type": "boolean" },
+            "nodejs_version":            { "type": ["string", "null"] },
+            "openssh":                   { "type": "boolean" },
+            "openssh_version":           { "type": ["string", "null"] }
+          }
+        }
+      }
+    },
+
+    "results": {
+      "type": "object",
+      "required": ["ssh", "firewall", "fail2ban", "updates", "filesystem"],
+      "properties": {
+        "ssh": {
+          "type": "object",
+          "required": ["permit_root_login"],
+          "properties": {
+            "permit_root_login":    { "type": "string" },
+            "password_auth":        { "type": "string" },
+            "port":                 { "type": "string" },
+            "authorized_keys_count":{ "type": "number" }
+          }
+        },
+        "firewall": {
+          "type": "object",
+          "required": ["open_ports"],
+          "properties": {
+            "open_ports": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "fail2ban": {
+          "type": "object",
+          "required": ["installed", "active"],
+          "properties": {
+            "installed": { "type": "boolean" },
+            "active":    { "type": "boolean" }
+          }
+        },
+        "updates": {
+          "type": "object",
+          "required": ["pending_security_updates"],
+          "properties": {
+            "pending_security_updates": { "type": "number", "minimum": 0 }
+          }
+        },
+        "filesystem": {
+          "type": "object",
+          "required": ["env_files_in_git"],
+          "properties": {
+            "env_files_in_git":         { "type": "array", "items": { "type": "string" } },
+            "env_files_found":          { "type": "array", "items": { "type": "string" } },
+            "env_files_world_readable": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "processes": {
+          "type": "object",
+          "properties": {
+            "env_vars_exposed_in_ps": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "docker": {
+          "type": "object",
+          "properties": {
+            "api_exposed":        { "type": "boolean" },
+            "root_containers":    { "type": "array", "items": { "type": "string" } },
+            "exposed_ports":      { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "databases": {
+          "type": "object",
+          "properties": {
+            "postgresql_exposed": { "type": "array", "items": { "type": "string" } },
+            "redis_auth":         { "type": ["string", "null"] },
+            "mongodb_exposed":    { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "system": {
+          "type": "object",
+          "properties": {
+            "sudo_users":         { "type": "string" },
+            "disk_usage_percent": { "type": "string" },
+            "swap_enabled":       { "type": "boolean" }
+          }
+        },
+        "ssl": {
+          "type": "object",
+          "properties": {
+            "certificates": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "logs": {
+          "type": "object",
+          "properties": {
+            "failed_login_attempts_24h": { "type": "number", "minimum": 0 },
+            "top_attacking_ips":         { "type": "array", "items": { "type": "string" } },
+            "active_attack_detected":    { "type": "boolean" }
+          }
+        }
+      }
+    },
+
+    "step_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["step_id", "status", "duration_ms"],
+        "properties": {
+          "step_id":       { "type": "string" },
+          "status":        { "type": "string", "enum": ["success", "failed", "skipped"] },
+          "parsed_value":  {},
+          "raw_output":    { "type": "string", "maxLength": 500 },
+          "error_code":    { "type": "string" },
+          "error_message": { "type": "string" },
+          "retries":       { "type": "array" },
+          "agent_note":    { "type": "string", "maxLength": 500 },
+          "duration_ms":   { "type": "number", "minimum": 0 }
+        }
+      }
+    }
+  }
+}
