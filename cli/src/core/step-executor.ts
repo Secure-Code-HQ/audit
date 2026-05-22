@@ -9,7 +9,7 @@ function sanitizeRawOutput(raw: string): string {
   return raw
     .replace(/,pid=\d+,fd=\d+/g, '')
     .replace(/users:\(\([^)]*\)\)/g, '')
-    .replace(/\s{2,}/g, ' ')
+    .replace(/[ \t]{2,}/g, ' ')
 }
 
 export async function executeStep(
@@ -83,7 +83,8 @@ function handleError(
   step: StepDefinition, err: unknown, retries: StepRetry[], start: number,
   label: string, logger: ILogger,
 ): StepResult | null {
-  const errorMessage = err instanceof Error ? err.message : String(err)
+  const errorRaw = err instanceof Error ? err.message : String(err)
+  const errorMessage = errorRaw.length > 500 ? errorRaw.slice(0, 500) + '... (truncated)' : errorRaw
   retries.push({ command: label, outcome: 'failed', error_message: errorMessage, duration_ms: Date.now() - start })
   logger.emit({ type: 'debug', message: `Step ${step.id} failed` })
   return null

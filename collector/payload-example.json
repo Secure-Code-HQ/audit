@@ -1,7 +1,7 @@
 {
   "token": "tok_example_abc123",
   "plan_id": "server-audit-free",
-  "plan_version": "1.7.0",
+  "plan_version": "1.8.0",
   "agent_version": "1.2.0",
   "timestamp": "2026-05-18T14:32:00.000Z",
   "dry_run": false,
