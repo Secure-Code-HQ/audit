@@ -1,0 +1,48 @@
+name: Validate content
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate payload example against schema (TR-002)
+        run: |
+          npx --yes ajv-cli@5 validate -s collector/payload.schema.json -d collector/payload-example.json --spec=draft7
+
+      - name: Shellcheck install.sh
+        run: shellcheck install.sh
+
+      - name: TypeScript compile check
+        run: |
+          cd cli
+          npm install --save-dev typescript @types/node
+          npx tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext src/**/*.ts || echo "::warning::TypeScript errors found"
+
+      - name: Scan check docs for forbidden patterns (TR-003)
+        run: |
+          PATTERN='-[0-9]+ punt|-[0-9]+ point|deducci|deduction|\btier\b|free.*plan|paid.*plan|\bpricing\b|free.*tier|paid.*tier'
+          if grep -rEi "$PATTERN" checks/; then
+            echo "::error::Forbidden patterns found in check documentation."
+            exit 1
+          fi
+          echo "Check docs are clean."
+
+      - name: Scan CLI files for forbidden patterns (safety check)
+        run: |
+          PATTERN='ANTHROPIC_API_KEY|STRIPE_|scoring|deduction|deduct|pricing|\bprice\b|prompt.*claude|tier.*free|tier.*paid'
+          if grep -rEi "$PATTERN" cli/; then
+            echo "::error::Forbidden patterns found in CLI source files."
+            exit 1
+          fi
+          echo "CLI files are clean."

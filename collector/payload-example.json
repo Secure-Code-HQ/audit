@@ -1,0 +1,98 @@
+{
+  "token": "tok_example_abc123",
+  "plan_id": "server-audit-free",
+  "plan_version": "1.5.1",
+  "agent_version": "1.0.0",
+  "timestamp": "2026-05-18T14:32:00.000Z",
+  "dry_run": false,
+  "preflight_incomplete": false,
+  "server_context": {
+    "network_exposure": "public",
+    "server_purpose": "production_single",
+    "data_sensitivity": "personal"
+  },
+  "environment": {
+    "os": "Ubuntu 24.04 LTS",
+    "kernel": "6.8.0-107-generic",
+    "uptime_days": 42,
+    "public_ip": "203.0.113.42",
+    "detected_stack": {
+      "docker": true,
+      "docker_version": "24.0.7",
+      "nodejs": true,
+      "nodejs_version": "20.11.0",
+      "postgresql": true,
+      "postgresql_version": "16.2",
+      "redis": true,
+      "redis_version": "7.2.4",
+      "caddy": true,
+      "caddy_version": "2.7.6",
+      "nginx": false,
+      "openssh": true,
+      "openssh_version": "9.6p1"
+    }
+  },
+  "results": {
+    "ssh": {
+      "permit_root_login": "no",
+      "port": "22"
+    },
+    "firewall": {
+      "open_ports": ["22/tcp", "80/tcp", "443/tcp"]
+    },
+    "fail2ban": {
+      "installed": true,
+      "active": true
+    },
+    "updates": {
+      "pending_security_updates": 3
+    },
+    "filesystem": {
+      "env_files_in_git": []
+    }
+  },
+  "step_results": [
+    {
+      "step_id": "ssh-root-login",
+      "status": "success",
+      "parsed_value": "no",
+      "raw_output": "permitrootlogin no",
+      "duration_ms": 245
+    },
+    {
+      "step_id": "ssh-default-port",
+      "status": "success",
+      "parsed_value": "22",
+      "raw_output": "port 22",
+      "duration_ms": 198
+    },
+    {
+      "step_id": "firewall-open-ports",
+      "status": "success",
+      "parsed_value": ["22/tcp", "80/tcp", "443/tcp"],
+      "raw_output": "22/tcp                     ALLOW       Anywhere\n80/tcp                     ALLOW       Anywhere\n443/tcp                    ALLOW       Anywhere",
+      "duration_ms": 312
+    },
+    {
+      "step_id": "fail2ban-active",
+      "status": "success",
+      "parsed_value": true,
+      "raw_output": "active",
+      "duration_ms": 156
+    },
+    {
+      "step_id": "env-in-git",
+      "status": "success",
+      "parsed_value": [],
+      "agent_note": "No .env files tracked in git",
+      "duration_ms": 1842
+    },
+    {
+      "step_id": "security-updates",
+      "status": "success",
+      "parsed_value": 3,
+      "raw_output": "3",
+      "duration_ms": 2103
+    }
+  ]
+}
