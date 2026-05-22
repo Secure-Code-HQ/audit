@@ -16,6 +16,7 @@ const ALLOWED_PROGRAMS = new Set([
   'sysctl', 'lsb_release', 'hostnamectl',
   'openssl', 'git', 'crontab',
   'which', 'lastb', 'certbot', 'swapon', 'ps',
+  'sudo',
 ])
 
 export function isProgramAllowed(program: string): boolean {
@@ -71,6 +72,12 @@ function hasBlockedArgs(program: string, args: string[]): boolean {
     const allowed = ['x509', 'version']
     if (!args.some(a => allowed.includes(a))) return true
     if (args.some(a => /^(s_client|s_server|req|genrsa|genpkey|enc|ca)$/.test(a))) return true
+  }
+
+  if (name === 'sudo') {
+    if (!args.includes('-n')) return true
+    const subProgram = args.find(a => !a.startsWith('-'))
+    if (!subProgram || !ALLOWED_PROGRAMS.has(subProgram.replace(/^.*\//, ''))) return true
   }
 
   if (name === 'find') {

@@ -1,7 +1,7 @@
 import type { StepDefinition, StepResult, StepRetry } from './types'
 import type { ICommandRunner } from '../ports/command-runner'
 import type { ILogger } from '../ports/logger'
-import { classifyError, isEmptyResultError } from './errors'
+import { classifyError } from './errors'
 import { parseStepOutput } from './parsers'
 import { isPipelineCommandAllowed } from './command-allowlist'
 
@@ -39,6 +39,8 @@ export async function executeStep(
   const retries: StepRetry[] = []
   const timeoutMs = step.timeout ?? 10_000
 
+  const globalStart = Date.now()
+
   for (const pipeline of allowed) {
     const label = pipeline.map(c => c.program).join(' | ')
     const start = Date.now()
@@ -52,6 +54,14 @@ export async function executeStep(
     }
   }
 
+  if (step.onEmptyResult) {
+    logger.emit({ type: 'step_completed', stepId: step.id })
+    return {
+      step_id: step.id, status: 'success', parsed_value: step.onEmptyResult.value,
+      agent_note: step.onEmptyResult.note, retries, duration_ms: Date.now() - globalStart,
+    }
+  }
+
   return buildFailResult(step, retries, logger)
 }
 
@@ -59,18 +69,13 @@ function handleOutput(
   step: StepDefinition, rawOutput: string, retries: StepRetry[], start: number, logger: ILogger,
 ): StepResult | null {
   const trimmed = rawOutput.trim()
-  if (!trimmed && step.onEmptyResult) {
-    logger.emit({ type: 'step_completed', stepId: step.id })
-    return {
-      step_id: step.id, status: 'success', parsed_value: step.onEmptyResult.value,
-      agent_note: step.onEmptyResult.note, retries, duration_ms: Date.now() - start,
-    }
-  }
-  const parsedValue = parseStepOutput(rawOutput, step.parser)
+  if (!trimmed) return null
+  const sanitized = sanitizeRawOutput(rawOutput)
+  const parsedValue = parseStepOutput(sanitized, step.parser)
   logger.emit({ type: 'step_completed', stepId: step.id })
   return {
     step_id: step.id, status: 'success', parsed_value: parsedValue,
-    raw_output: sanitizeRawOutput(rawOutput.slice(0, 500)), retries, duration_ms: Date.now() - start,
+    raw_output: sanitized.slice(0, 500), retries, duration_ms: Date.now() - start,
   }
 }
 
@@ -78,13 +83,6 @@ function handleError(
   step: StepDefinition, err: unknown, retries: StepRetry[], start: number,
   label: string, logger: ILogger,
 ): StepResult | null {
-  if (isEmptyResultError(err) && step.onEmptyResult) {
-    logger.emit({ type: 'step_completed', stepId: step.id })
-    return {
-      step_id: step.id, status: 'success', parsed_value: step.onEmptyResult.value,
-      agent_note: step.onEmptyResult.note, retries, duration_ms: Date.now() - start,
-    }
-  }
   const errorMessage = err instanceof Error ? err.message : String(err)
   retries.push({ command: label, outcome: 'failed', error_message: errorMessage, duration_ms: Date.now() - start })
   logger.emit({ type: 'debug', message: `Step ${step.id} failed` })
