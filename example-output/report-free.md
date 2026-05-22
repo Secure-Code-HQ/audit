@@ -96,5 +96,5 @@ The full report runs an external analysis from our servers against your public I
 
 *This report reflects the state of the server at the time of analysis. It does not constitute a security guarantee. Server Audit detects known risk configurations but cannot guarantee the absence of vulnerabilities not covered by the checks executed.*
 
-*Generated April 27, 2026 · Server Audit v1.0.0 · Free Plan*  
+*Generated April 27, 2026 · Server Audit v1.1.0 · Free Plan*  
 *Report ID: rpt_example · Audited IP: 203.0.113.42*

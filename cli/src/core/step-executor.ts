@@ -5,6 +5,13 @@ import { classifyError, isEmptyResultError } from './errors'
 import { parseStepOutput } from './parsers'
 import { isPipelineCommandAllowed } from './command-allowlist'
 
+function sanitizeRawOutput(raw: string): string {
+  return raw
+    .replace(/,pid=\d+,fd=\d+/g, '')
+    .replace(/users:\(\([^)]*\)\)/g, '')
+    .replace(/\s{2,}/g, ' ')
+}
+
 export async function executeStep(
   step: StepDefinition,
   runner: ICommandRunner,
@@ -63,7 +70,7 @@ function handleOutput(
   logger.emit({ type: 'step_completed', stepId: step.id })
   return {
     step_id: step.id, status: 'success', parsed_value: parsedValue,
-    raw_output: rawOutput.slice(0, 500), retries, duration_ms: Date.now() - start,
+    raw_output: sanitizeRawOutput(rawOutput.slice(0, 500)), retries, duration_ms: Date.now() - start,
   }
 }
 

@@ -3,7 +3,7 @@ import { SUPPORTED_LOCALES } from '../core/types'
 import { detectSystemLocale } from './locale'
 
 const BASE_URL_DEFAULT = 'https://audit.securecodehq.com'
-const AGENT_VERSION = '1.0.0'
+const AGENT_VERSION = '1.1.0'
 const STEP_TIMEOUT_MS = 10_000
 const PHASE2_TIMEOUT_MS = 5 * 60 * 1000
 
