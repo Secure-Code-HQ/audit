@@ -5,6 +5,15 @@ Run a security audit on your Linux server in 2 minutes. One command.
 ```bash
 curl -sSL https://audit.securecodehq.com/run/YOUR_TOKEN | bash
 ```
+## Why this exists
+
+Docker bypasses UFW silently. Redis runs without auth by default. 
+PostgreSQL listens on 0.0.0.0 unless explicitly configured otherwise. 
+SSH root login is enabled by default on most VPS providers. 
+
+These are the misconfigurations that keep appearing on production Linux 
+servers because they require active checking to detect. Your firewall 
+can look healthy while your database is fully exposed.
 
 ## What it does
 
